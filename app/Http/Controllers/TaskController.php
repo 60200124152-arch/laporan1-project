@@ -7,39 +7,29 @@ use Illuminate\Http\Request;
 
 class TaskController extends Controller
 {
+    // 1. Fungsi untuk menampilkan semua task
     public function index()
     {
         $tasks = Task::all();
         return view('tasks.index', compact('tasks'));
     }
 
-    public function create()
-    {
-        return view('tasks.create');
-    }
-
+    // 2. Fungsi untuk menyimpan task baru
     public function store(Request $request)
     {
-        Task::create($request->all());
-        return redirect('/tasks');
+        $request->validate(['title' => 'required']);
+        Task::create(['title' => $request->title]);
+        return redirect()->back();
     }
 
-    public function edit($id)
+    // 3. Fungsi DELETE yang baru saja kamu buat
+    public function destroy(Task $task)
     {
-        $task = Task::find($id);
-        return view('tasks.edit', compact('task'));
-    }
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Hanya admin yang boleh menghapus tugas ini!');
+        }
 
-    public function update(Request $request, $id)
-    {
-        $task = Task::find($id);
-        $task->update($request->all());
-        return redirect('/tasks');
-    }
-
-    public function destroy($id)
-    {
-        Task::destroy($id);
-        return redirect('/tasks');
+        $task->delete();
+        return redirect()->back()->with('success', 'Task berhasil dihapus');
     }
 }
